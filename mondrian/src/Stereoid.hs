@@ -1,35 +1,48 @@
-module OrdGood where
+module Stereoid where
 
 import Data.Monoid ((<>))
 
--- Typeclasses to the rescue!
--- We need to derive Eq because Ord is a "sub-type" of it
--- Haskell can infer how to derive it, because it rocks.
--- Creating an instance of Ord looks like a lot of work, but it will pay
--- off!
-
 data Color = V | G | R deriving (Eq, Show)
-
-data QuoteData = QuoteData { province :: String, isBersani :: Bool, isNewInsurance :: Bool, chosenClaimsExperience5 :: Int, chosenClaimsExperience2 :: Int, chosenClaimsExperienceYear :: Int }
-
-quicky = QuoteData{province="MI", isBersani=False, isNewInsurance=False, chosenClaimsExperience5=1, chosenClaimsExperience2=1, chosenClaimsExperienceYear=2}
 
 instance Ord Color where
     compare V V = EQ
-    compare G G = EQ
-    compare R R = EQ
     compare V _ = GT
+    compare G G = EQ
     compare G V = LT
     compare G _ = GT
+    compare R R = EQ
     compare R _ = LT
 
--- There's something odd about this...
--- Why am I putting all colors in a list and then folding?
--- Colors can compose! we need a Monoid
--- But what's a Monoid?
+data QuoteData = QuoteData { province :: String, isBersani :: Bool, isNewInsurance :: Bool, chosenClaimsExperience5 :: Int, chosenClaimsExperience2 :: Int, chosenClaimsExperienceYear :: Int }
 
-restrict :: QuoteData -> Color
-restrict quote = minimum [bersani quote, isRedProvince quote, chosenClaimsExperience quote]
+-- We're looking for something not yet formalized
+-- A particular algebraic structure with two binary operations
+-- both associative and commutative among themselves
+
+-- For lack of better terms... I'll call them "stereoids"!
+-- They're like two monoids, one unraveling the other
+
+-- Since no one thought about them before
+-- we'll have to make our own typeclass
+
+class Stereoids s where
+    identity :: s
+    invIdentity :: s
+    add :: s -> s -> s
+    subt :: s -> s -> s
+
+-- for our purposes, add = Restrictive, subtract = Widening
+
+instance Stereoids Color where
+    identity = V
+    invIdentity = R
+    add = min
+    subt = max
+
+restrict quote = foldr add identity (fmap ($ quote) [isRedProvince, bersani])
+widen quote = foldr subt invIdentity (fmap ($ quote) [chosenClaimsExperience, bersani])
+
+calculate quote = subt (widen quote) (restrict quote)
 
 -----------------------------------------------------------------------------------
     -------------------------------------------------------------------------------
