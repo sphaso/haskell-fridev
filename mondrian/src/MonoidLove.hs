@@ -33,7 +33,6 @@ instance Monoid Widening where
 restrict :: QuoteData -> Restrictive
 restrict quote = bersani quote
                <> isRedProvince quote
-               <> chosenClaimsExperience quote
 
 widen quote = chosenClaimsExperience quote
 
@@ -41,26 +40,26 @@ widen quote = chosenClaimsExperience quote
     -------------------------------------------------------------------------------
         ---------------------------------------------------------------------------
 
-bersani :: QuoteData -> Restrictive Color
-bersani QuoteData{isBersani=True} = G
-bersani _ = V
+bersani :: QuoteData -> Restrictive
+bersani QuoteData{isBersani=True} = Restrictive G
+bersani _ = Restrictive V
 
 redProvince :: [String]
 redProvince = ["NA", "CE", "SA", "BA", "BT", "FG", "TA", "VV", "CZ", "LT", "PO", "AV", "BR", "KR", "RC"]
 
-isRedProvince :: QuoteData -> Restrictive Color
+isRedProvince :: QuoteData -> Restrictive
 isRedProvince QuoteData{province=prov} =  case prov `elem` redProvince of
-                                            True -> V
-                                            _    -> R
+                                            True -> Restrictive V
+                                            _    -> Restrictive R
 
-chosenClaimsExperience :: QuoteData -> Widening Color
-chosenClaimsExperience QuoteData{isNewInsurance=True} = V
+chosenClaimsExperience :: QuoteData -> Widening
+chosenClaimsExperience QuoteData{isNewInsurance=True} = Widening V
 chosenClaimsExperience QuoteData{chosenClaimsExperience5=five, chosenClaimsExperience2=two, chosenClaimsExperienceYear=year}
-  | stringa == "0-0" = V
-  | stringa == "5Y-0" = V
-  | stringa == "4Y-0" = V
-  | stringa `elem` ["3Y-0", "2Y-1", "1Y-1", "2-0", "2-1", "2-2", "2->0", ">2->=0"] = R
-  | otherwise = G
+  | stringa == "0-0" = Widening V
+  | stringa == "5Y-0" = Widening V
+  | stringa == "4Y-0" = Widening V
+  | stringa `elem` ["3Y-0", "2Y-1", "1Y-1", "2-0", "2-1", "2-2", "2->0", ">2->=0"] = Widening R
+  | otherwise = Widening G
   where stringa = (chosenClaimsFive year five) <> (chosenClaimsTwo year two five)
 
 chosenClaimsFive :: Int -> Int -> String
